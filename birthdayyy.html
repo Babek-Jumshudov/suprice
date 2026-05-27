@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>birthday</title>
+    <style>
+        body {
+            background: white;
+            font-family: Arial, sans-serif;
+        }
+        h1 {
+            color: rgb(0, 153, 255);
+            text-align: center;
+            margin-top: 20px;
+            font-size: 20px;
+        }
+        
+        
+        .cake-container {
+            position: relative;
+            width: 200px;
+            margin: 100px auto 0 auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        
+        .candles {
+            display: flex;
+            gap: 15px;
+            margin-bottom: -5px;
+            z-index: 2;
+        }
+        .candle {
+            width: 8px;
+            height: 50px;
+            background: linear-gradient(to right, #e0e0e0, #ffffff);
+            border-radius: 3px 3px 0 0;
+            position: relative;
+        }
+        
+        .candle::before {
+            content: '';
+            position: absolute;
+            top: -8px;
+            left: 3px;
+            width: 2px;
+            height: 8px;
+            background: #333;
+        }
+
+        
+        .flame {
+            position: absolute;
+            top: -22px;
+            left: -2px;
+            width: 12px;
+            height: 16px;
+            background: orange;
+            border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+            box-shadow: 0 0 10px rgba(255, 165, 0, 0.8);
+            animation: flicker 0.1s ease-in-out infinite alternate;
+            transition: opacity 0.5s ease;
+        }
+
+        
+        .flame.blown-out {
+            opacity: 0;
+        }
+
+        @keyframes flicker {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.1) rotate(2deg); }
+        }
+
+        
+        .cake {
+            width: 200px;
+            height: 120px;
+            background: #ADD8E6; 
+            border-radius: 20px 20px 10px 10px;
+            position: relative;
+            z-index: 1;
+    
+            box-shadow: 0 8px 0 #fff inset, 
+                        0 16px 0 #ADD8E6 inset, 
+                        0 26px 0 #ffb6c1 inset; 
+        }
+        
+
+
+       
+        .cake::after {
+            content: '🍓 🍓 🍓 🍓';
+    position: absolute;
+    top: -15px;
+    left: 0;
+    width: 100%;
+    text-align: center;
+    font-size: 18px;
+    letter-spacing: 10px;
+        }
+       
+
+        
+        .mic-btn {
+            display: block;
+            margin: 30px auto;
+            padding: 10px 20px;
+            background-color: pink;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Mənim sevimli Riyaziyyatçım, doğum gününüz mübarək!🎉
+Yaxşı ki doğulmusunuz və yaxşı ki mənim həyatımın ən dəyərli "sabit" insanlarından birisiz❤️
+Bilirəm, həyatda hər şeyə bir düstur tapmağı, hər problemi bir tənlik kimi həll etməyi sevirsiz.Siz mənim həyat koordinat sistemimdə tapdığım ən doğru nöqtəsiz❤️. Bizim aramızda ola bağ elə bir aksiomdur ki, onun sübata ehtiyacı yoxdur, sadəcə var və mükəmməldir❤️
+Həyatın sizə gətirəcəyi bütün sürprizlər həmişə müsbət işarəli olsun. Həyat tənliyinizdə heç vaxt "həlli yoxdur" bəndi ilə qarşılaşmayasız.
+Yaxşı ki varımsız🥳🎂❤️</h1>
+
+    <button class="mic-btn" id="startBtn">Üfürmək üçün mikrofona icazə ver</button>
+
+    <div class="cake-container">
+        <div class="candles">
+            <div class="candle"><div class="flame"></div></div>
+            <div class="candle"><div class="flame"></div></div>
+            <div class="candle"><div class="flame"></div></div>
+        </div>
+        <div class="cake"></div>
+    </div>
+
+    <script>
+        const startBtn = document.getElementById('startBtn');
+        const flames = document.querySelectorAll('.flame');
+
+        startBtn.addEventListener('click', async () => {
+            try {
+                
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                startBtn.innerText = "İndi telefona bərkdən üfürün! 🌬️";
+                startBtn.style.background = "#lightgreen";
+
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const analyser = audioContext.createAnalyser();
+                const source = audioContext.createMediaStreamSource(stream);
+                source.connect(analyser);
+
+                analyser.fftSize = 256;
+                const bufferLength = analyser.frequencyBinCount;
+                const dataArray = new Uint8Array(bufferLength);
+
+                function checkBlow() {
+                    analyser.getByteFrequencyData(dataArray);
+                    
+                    
+                    let sum = 0;
+                    for (let i = 0; i < bufferLength; i++) {
+                        sum += dataArray[i];
+                    }
+                    let average = sum / bufferLength;
+
+                    
+                    if (average > 30) {
+                        flames.forEach(flame => {
+                            flame.classList.add('blown-out');
+                        });
+                        startBtn.innerText = "Təbriklər! Şamlar söndü 🎂🎉";
+                        
+                        stream.getTracks().forEach(track => track.stop());
+                        return;
+                    }
+
+                    requestAnimationFrame(checkBlow);
+                }
+
+                checkBlow();
+
+            } catch (err) {
+                alert("Mikrofona icazə verilmədi! Zəhmət olmasa icazə verin.");
+                console.error(err);
+            }
+        });
+    </script>
+
+</body>
+</html>
